@@ -74,6 +74,8 @@ def main(arguments):
         client = Client(token_yam).init()  # Инициализирцем токен
         artist = client.users_likes_tracks()[0].fetch_track().artists_name()[0]  # Получаем артиста
         track = client.users_likes_tracks()[0].fetch_track()['title']  # Получаем название трека
+        album = client.users_likes_tracks()[0].fetch_track()['albums']
+        genre = album[0]['genre']
         url = f'https://music.yandex.ru/album/{client.users_likes_tracks()[0].album_id}/track/{client.users_likes_tracks()[0].id}'  # Подставялем URL
         print(f'Ласт лайкед: {artist} - {track}')
         send_file = f'{artist} - {track}.mp3'  # Отправляемый файл в формате mp3
@@ -85,7 +87,7 @@ def main(arguments):
             client.users_likes_tracks()[0].fetch_track().download(f'{artist} - {track}.mp3')  # Качаем трек
             try:
                 await bot.send_audio(group_id_tg, open(send_file, 'rb'),
-                                 caption=f'🎧 {artist} - {track}\n<a href="{url}">🎧 Яндекс.Музыка</a>')
+                                 caption=f'🎧 {artist} - {track}\n<b>🎧 Жанр:</b> #{genre}\n\n<a href="{url}">🎧 Я.Музыка</a>')
                 try:
                     with open(LAST_FILE_NAME, 'w', encoding='utf-8') as last_track:  # Открываем файл, чтобы записать инфу
                         last_track.write(send_file)  # Записываем последний отправленный трек
