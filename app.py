@@ -79,7 +79,7 @@ def main(arguments):
         send_file = f'{artist} - {track}.mp3'  # Отправляемый файл в формате mp3
         if send_file == last_state:
             print('Изменений нет')  # Последний лайкнутый не изменился. Ничего не отправляем
-            await bot.send_message(chat_id_tg, 'изменений нет')
+            # await bot.send_message(chat_id_tg, 'изменений нет')
             # last_state.close
         else:
             client.users_likes_tracks()[0].fetch_track().download(f'{artist} - {track}.mp3')  # Качаем трек
