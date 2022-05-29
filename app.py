@@ -98,8 +98,16 @@ def main(arguments):
             if track.id == last_state:
                 index_last_track -= 1 # следующий
                 break
+        while index_last_track >= 0:
+            track = likes[index_last_track].fetch_track()
+            if track.available:
+                break
+            index_last_track -= 1
 
-        track = likes[index_last_track].fetch_track()
+        if index_last_track < 0 or (not track.available):
+            logger.error("Доступных треков больше нет")
+            return
+
         artist = track.artists_name()[0]  # Получаем артиста
         title = track.title  # Получаем название трека
         album = track.albums[0]
