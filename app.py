@@ -93,7 +93,12 @@ def main(arguments):
 
         client = Client(token_yam).init()  # Инициализирцем токен
         likes = client.users_likes_tracks()
-        index_last_track = 0  # вобще нужно найти какой последний посланый
+        index_last_track = 0  # вобще нужно найти какой последний посланный
+        for index_last_track, track in enumerate(likes.tracks):
+            if track.id == last_state:
+                index_last_track -= 1 # следующий
+                break
+
         track = likes[index_last_track].fetch_track()
         artist = track.artists_name()[0]  # Получаем артиста
         title = track.title  # Получаем название трека
@@ -115,7 +120,7 @@ def main(arguments):
                 try:
                     with open(LAST_FILE_NAME, 'w',
                               encoding='utf-8') as last_track:  # Открываем файл, чтобы записать инфу
-                        last_track.write(send_file)  # Записываем последний отправленный трек
+                        last_track.write(track.id)  # Записываем последний отправленный трек
                 except:
                     logger.error("ошибка записи в файл {0}", LAST_FILE_NAME)
             finally:
