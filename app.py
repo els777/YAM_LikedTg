@@ -1,22 +1,20 @@
-import sys
-import os
-import time
 import logging
+import os
+import sys
+from argparse import ArgumentParser
+from logging import StreamHandler
 
 import mutagen
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
-from mutagen.easyid3 import EasyID3
-from yandex_music import Client, Track
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from logging import StreamHandler
-from argparse import ArgumentParser
-from mutagen import File
-from mutagen.id3 import TIT2, TPE1, TALB, APIC, TDRC, USLT
+from mutagen.easyid3 import EasyID3
+from mutagen.id3 import TIT2
+from yandex_music import Client, Track
 
 LAST_FILE_NAME = 'last.txt'
-SHEDULE_INTERVAL_SECONDS = 60
+SHEDULE_INTERVAL_SECONDS = 60 * 30
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +42,7 @@ parser.add_argument("-q", "--quiet",
 DELIMITER = "/"
 
 
-def set_mp3_tags(track_file_name: str, track: Track) :
+def set_mp3_tags(track_file_name: str, track: Track):
     try:
         meta = EasyID3(track_file_name)
     except mutagen.id3.ID3NoHeaderError:
@@ -55,6 +53,7 @@ def set_mp3_tags(track_file_name: str, track: Track) :
     meta['artist'] = DELIMITER.join(i['name'] for i in track.artists)
     meta['genre'] = track.albums[0].genre
     meta.save()
+
 
 def main(arguments):
     args = parser.parse_args(arguments)
@@ -96,7 +95,7 @@ def main(arguments):
         index_last_track = 0  # вобще нужно найти какой последний посланный
         for index_last_track, track in enumerate(likes.tracks):
             if track.id == last_state:
-                index_last_track -= 1 # следующий
+                index_last_track -= 1  # следующий
                 break
         while index_last_track >= 0:
             track = likes[index_last_track].fetch_track()
