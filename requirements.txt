@@ -27,3 +27,4 @@ pip~=22.1.1
 wheel~=0.36.2
 setuptools~=49.2.1
 APScheduler~=3.9.1
+mutagen~=1.45.1

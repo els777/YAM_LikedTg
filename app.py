@@ -3,13 +3,17 @@ import os
 import time
 import logging
 
+import mutagen
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
-from yandex_music import Client
+from mutagen.easyid3 import EasyID3
+from yandex_music import Client, Track
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from logging import StreamHandler
 from argparse import ArgumentParser
+from mutagen import File
+from mutagen.id3 import TIT2, TPE1, TALB, APIC, TDRC, USLT
 
 LAST_FILE_NAME = 'last.txt'
 SHEDULE_INTERVAL_SECONDS = 60
@@ -37,10 +41,25 @@ parser.add_argument("-q", "--quiet",
                     action="store_false", dest="verbose", default=True,
                     help="don't print status messages to stdout")
 
+DELIMITER = "/"
+
+
+def set_mp3_tags(track_file_name: str, track: Track) :
+    try:
+        meta = EasyID3(track_file_name)
+    except mutagen.id3.ID3NoHeaderError:
+        meta = mutagen.File(track_file_name, easy=True)
+        meta.add_tags()
+
+    meta['title'] = track.title
+    meta['artist'] = DELIMITER.join(i['name'] for i in track.artists)
+    meta['genre'] = track.albums[0].genre
+    meta.save()
+
 def main(arguments):
     args = parser.parse_args(arguments)
 
-    token_tg = args.bot 
+    token_tg = args.bot
     token_yam = args.yam
     chat_id_tg = args.chat
     group_id_tg = args.group
@@ -66,30 +85,36 @@ def main(arguments):
         print('Проверка лайкнутого трека')
 
         try:
-            with open(LAST_FILE_NAME, 'r', encoding='utf-8') as last_state_open:  # Открываем файл с последний лайкнутым треком
+            with open(LAST_FILE_NAME, 'r',
+                      encoding='utf-8') as last_state_open:  # Открываем файл с последний лайкнутым треком
                 last_state = last_state_open.read()  # Читаем последний лайкнутый трек
         except:
             last_state = ""  # Нет файла - первый запуск
 
         client = Client(token_yam).init()  # Инициализирцем токен
-        artist = client.users_likes_tracks()[0].fetch_track().artists_name()[0]  # Получаем артиста
-        track = client.users_likes_tracks()[0].fetch_track()['title']  # Получаем название трека
-        album = client.users_likes_tracks()[0].fetch_track()['albums']
-        genre = album[0]['genre']
-        url = f'https://music.yandex.ru/album/{client.users_likes_tracks()[0].album_id}/track/{client.users_likes_tracks()[0].id}'  # Подставялем URL
-        print(f'Ласт лайкед: {artist} - {track}')
-        send_file = f'{artist} - {track}.mp3'  # Отправляемый файл в формате mp3
+        likes = client.users_likes_tracks()
+        index_last_track = 0  # вобще нужно найти какой последний посланый
+        track = likes[index_last_track].fetch_track()
+        artist = track.artists_name()[0]  # Получаем артиста
+        title = track.title  # Получаем название трека
+        album = track.albums[0]
+        genre = album.genre
+        url = f'https://music.yandex.ru/album/{album.id}/track/{track.id}'  # Подставялем URL
+        print(f'Ласт лайкед: {artist} - {title}')
+        send_file = f'{artist} - {title}.mp3'  # Отправляемый файл в формате mp3
         if send_file == last_state:
             print('Изменений нет')  # Последний лайкнутый не изменился. Ничего не отправляем
             # await bot.send_message(chat_id_tg, 'изменений нет')
             # last_state.close
         else:
-            client.users_likes_tracks()[0].fetch_track().download(f'{artist} - {track}.mp3')  # Качаем трек
+            track.download(send_file)  # Качаем трек
+            set_mp3_tags(send_file, track)
             try:
                 await bot.send_audio(group_id_tg, open(send_file, 'rb'),
-                                 caption=f'🎧 {artist} - {track}\n<b>🎧 Жанр:</b> #{genre}\n\n<a href="{url}">🎧 Я.Музыка</a>')
+                                     caption=f'🎧 {artist} - {title}\n<b>🎧 Жанр:</b> #{genre}\n\n<a href="{url}">🎧 Я.Музыка</a>')
                 try:
-                    with open(LAST_FILE_NAME, 'w', encoding='utf-8') as last_track:  # Открываем файл, чтобы записать инфу
+                    with open(LAST_FILE_NAME, 'w',
+                              encoding='utf-8') as last_track:  # Открываем файл, чтобы записать инфу
                         last_track.write(send_file)  # Записываем последний отправленный трек
                 except:
                     logger.error("ошибка записи в файл {0}", LAST_FILE_NAME)
