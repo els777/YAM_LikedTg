@@ -4,6 +4,7 @@ import sys
 from argparse import ArgumentParser
 from logging import StreamHandler
 
+import unicodedata2
 import mutagen
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
@@ -114,6 +115,13 @@ def main(arguments):
         url = f'https://music.yandex.ru/album/{album.id}/track/{track.id}'  # Подставялем URL
         print(f'Ласт лайкед: {artist} - {title}')
         send_file = f'{artist} - {title}.mp3'  # Отправляемый файл в формате mp3
+        send_file = send_file.replace('*', '_')
+        slugify(send_file).replace("/", "_").replace("\\", "_").replace("\'", "_")
+        send_file = send_file.replace("\"", "_").replace("?", "_")
+        send_file = send_file.replace("|", "_")
+        send_file = send_file.replace(":", "_")
+        send_file = send_file.replace("!", "_")
+        send_file = send_file.replace("*", "_")
         if send_file == last_state:
             print('Изменений нет')  # Последний лайкнутый не изменился. Ничего не отправляем
             # await bot.send_message(chat_id_tg, 'изменений нет')
