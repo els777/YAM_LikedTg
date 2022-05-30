@@ -15,7 +15,7 @@ from mutagen.id3 import TIT2
 from yandex_music import Client, Track
 
 LAST_FILE_NAME = 'last.txt'
-SHEDULE_INTERVAL_SECONDS = 60 * 30
+SHEDULE_INTERVAL_SECONDS = 360
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,17 @@ parser.add_argument("-q", "--quiet",
                     help="don't print status messages to stdout")
 
 DELIMITER = "/"
+
+def slugify(value):
+    symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+               u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")
+
+    tr = {ord(a): ord(b) for a, b in zip(*symbols)}
+
+    value = value.translate(tr)  # looks good
+
+    value = unicodedata2.normalize('NFKD', value).encode('ascii', 'ignore').decode('utf-8').strip()
+    return value
 
 
 def set_mp3_tags(track_file_name: str, track: Track):
