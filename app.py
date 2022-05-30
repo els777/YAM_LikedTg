@@ -15,7 +15,7 @@ from mutagen.id3 import TIT2
 from yandex_music import Client, Track
 
 LAST_FILE_NAME = 'last.txt'
-SHEDULE_INTERVAL_SECONDS = 360
+SHEDULE_INTERVAL_SECONDS = 60 * 30
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,6 @@ def slugify(value):
 
     value = unicodedata2.normalize('NFKD', value).encode('ascii', 'ignore').decode('utf-8').strip()
     return value
-
 
 def set_mp3_tags(track_file_name: str, track: Track):
     try:
@@ -125,7 +124,7 @@ def main(arguments):
         genre = album.genre
         url = f'https://music.yandex.ru/album/{album.id}/track/{track.id}'  # Подставялем URL
         print(f'Ласт лайкед: {artist} - {title}')
-        send_file = f'{artist} - {title}.mp3'  # Отправляемый файл в формате mp3
+        send_file = f'{artist} - {title}.mp3' # Отправляемый файл в формате mp3
         send_file = send_file.replace('*', '_')
         slugify(send_file).replace("/", "_").replace("\\", "_").replace("\'", "_")
         send_file = send_file.replace("\"", "_").replace("?", "_")
@@ -135,14 +134,13 @@ def main(arguments):
         send_file = send_file.replace("*", "_")
         if send_file == last_state:
             print('Изменений нет')  # Последний лайкнутый не изменился. Ничего не отправляем
-            # await bot.send_message(chat_id_tg, 'изменений нет')
-            # last_state.close
-        else:
+        else:           
             track.download(send_file)  # Качаем трек
             set_mp3_tags(send_file, track)
             try:
                 await bot.send_audio(group_id_tg, open(send_file, 'rb'),
                                      caption=f'🎧 {artist} - {title}\n<b>🎧 Жанр:</b> #{genre}\n\n<a href="{url}">🎧 Я.Музыка</a>')
+                print(f'Отправлен: {send_file}')
                 try:
                     with open(LAST_FILE_NAME, 'w',
                               encoding='utf-8') as last_track:  # Открываем файл, чтобы записать инфу
@@ -151,11 +149,8 @@ def main(arguments):
                     logger.error("ошибка записи в файл {0}", LAST_FILE_NAME)
             finally:
                 os.remove(send_file)  # Удаляем за собой файл
+                print(f'{send_file} Удалён')
 
-    @dp.message_handler(commands=['get'])
-    async def send_file_command(message: types.Message):
-        logger.debug("message %s", message)
-        await check_and_send_lastTrack()
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(check_and_send_lastTrack, 'interval', seconds=SHEDULE_INTERVAL_SECONDS)
