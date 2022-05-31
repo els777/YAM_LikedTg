@@ -151,7 +151,7 @@ def main(arguments):
             finally:
                 os.remove(send_file)  # Удаляем за собой файл
                 # await bot.send_message(chat_id_tg, f'Удёлан: {send_file}') # Создано для отправки в лс
-                print(f'Удёлан: {send_file}')
+                print(f'Удалён: {send_file}')
 
 
     scheduler = AsyncIOScheduler()
