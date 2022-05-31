@@ -4,6 +4,7 @@ import sys
 from argparse import ArgumentParser
 from logging import StreamHandler
 
+import unicodedata2
 import mutagen
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
@@ -14,7 +15,7 @@ from mutagen.id3 import TIT2
 from yandex_music import Client, Track
 
 LAST_FILE_NAME = 'last.txt'
-SHEDULE_INTERVAL_SECONDS = 60 * 30
+SHEDULE_INTERVAL_SECONDS = 60 * 30 # Отправка каждые 30 минут
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,17 @@ parser.add_argument("-q", "--quiet",
                     help="don't print status messages to stdout")
 
 DELIMITER = "/"
+# Транслитирация русских названий
+def slugify(value):
+    symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+               u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")
 
+    tr = {ord(a): ord(b) for a, b in zip(*symbols)}
+
+    value = value.translate(tr)  # looks good
+
+    value = unicodedata2.normalize('NFKD', value).encode('ascii', 'ignore').decode('utf-8').strip()
+    return value
 
 def set_mp3_tags(track_file_name: str, track: Track):
     try:
@@ -79,10 +90,9 @@ def main(arguments):
         if token_yam == '':
             logger.error("empty yandexMusic token")
             return
-
-        # await bot.send_message(chat_id_tg, 'Ушёл проверять последний лайкнутый трек')
+        
+        # await bot.send_message(chat_id_tg, 'Ушёл проверять последний лайкнутый трек') # Создано для отправки в лс
         print('Проверка лайкнутого трека')
-
         try:
             with open(LAST_FILE_NAME, 'r',
                       encoding='utf-8') as last_state_open:  # Открываем файл с последний лайкнутым треком
@@ -112,18 +122,26 @@ def main(arguments):
         album = track.albums[0]
         genre = album.genre
         url = f'https://music.yandex.ru/album/{album.id}/track/{track.id}'  # Подставялем URL
-        print(f'Ласт лайкед: {artist} - {title}')
-        send_file = f'{artist} - {title}.mp3'  # Отправляемый файл в формате mp3
+        print(f'Последний лайк: {artist} - {title}')
+        # await bot.send_message(chat_id_tg, 'Последний лайк: {artist} - {title}') # Создано для отправки в лс
+        send_file = f'{artist} - {title}.mp3' # Отправляемый файл в формате mp3
+        send_file = send_file.replace('*', '_')
+        slugify(send_file).replace("/", "_").replace("\\", "_").replace("\'", "_")
+        send_file = send_file.replace("\"", "_").replace("?", "_")
+        send_file = send_file.replace("|", "_")
+        send_file = send_file.replace(":", "_")
+        send_file = send_file.replace("!", "_")
+        send_file = send_file.replace("*", "_")
         if send_file == last_state:
+            # await bot.send_message(chat_id_tg, 'Изменений нет') # Создано для отправки в лс
             print('Изменений нет')  # Последний лайкнутый не изменился. Ничего не отправляем
-            # await bot.send_message(chat_id_tg, 'изменений нет')
-            # last_state.close
-        else:
+        else:           
             track.download(send_file)  # Качаем трек
             set_mp3_tags(send_file, track)
             try:
                 await bot.send_audio(group_id_tg, open(send_file, 'rb'),
                                      caption=f'🎧 {artist} - {title}\n<b>🎧 Жанр:</b> #{genre}\n\n<a href="{url}">🎧 Я.Музыка</a>')
+                print(f'Отправлен: {send_file}')
                 try:
                     with open(LAST_FILE_NAME, 'w',
                               encoding='utf-8') as last_track:  # Открываем файл, чтобы записать инфу
@@ -132,11 +150,9 @@ def main(arguments):
                     logger.error("ошибка записи в файл {0}", LAST_FILE_NAME)
             finally:
                 os.remove(send_file)  # Удаляем за собой файл
+                # await bot.send_message(chat_id_tg, f'Удёлан: {send_file}') # Создано для отправки в лс
+                print(f'Удёлан: {send_file}')
 
-    @dp.message_handler(commands=['get'])
-    async def send_file_command(message: types.Message):
-        logger.debug("message %s", message)
-        await check_and_send_lastTrack()
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(check_and_send_lastTrack, 'interval', seconds=SHEDULE_INTERVAL_SECONDS)
