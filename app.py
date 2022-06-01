@@ -62,7 +62,7 @@ def set_mp3_tags(track_file_name: str, track: Track):
 
     meta['title'] = track.title
     meta['artist'] = DELIMITER.join(i['name'] for i in track.artists)
-    meta['genre'] = track.albums[0].genre
+    meta['genre'] = track.albums[0].genre if track.albums[0].genre is not None else ""
     meta.save()
 
 
