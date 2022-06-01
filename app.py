@@ -23,16 +23,16 @@ handler = StreamHandler(stream=sys.stdout)
 logger.addHandler(handler)
 
 logger.setLevel(logging.DEBUG)
-logger.info('Start YAM bot')
+logger.info('Запуск YAM LikedTg')
 
 parser = ArgumentParser()
 
 parser.add_argument("-b", "--bot", dest="bot", required=True,
-                    help="telegram bot token", metavar="BOT")
+                    help="Telegram bot token", metavar="BOT")
 parser.add_argument("-c", "--chat", dest="chat",
-                    help="telegram chat id", metavar="CHAT")
+                    help="Telegram chat id", metavar="CHAT")
 parser.add_argument("-g", "--group", dest="group",
-                    help="telegram group id", metavar="GROUP")
+                    help="Telegram group id", metavar="GROUP")
 parser.add_argument("-y", "--yam", dest="yam",
                     help="Yandex Music token", metavar="YAM")
 
@@ -82,13 +82,13 @@ def main(arguments):
 
     async def check_and_send_lastTrack():
         if chat_id_tg == '':
-            logger.error("empty chat id")
+            logger.error("Chat ID не заполнен!")
             return
         if group_id_tg == '':
-            logger.error("empty group id")
+            logger.error("Group ID не заполнен!")
             return
         if token_yam == '':
-            logger.error("empty yandexMusic token")
+            logger.error("YandexMusic Token не заполнен")
             return
         
         # await bot.send_message(chat_id_tg, 'Ушёл проверять последний лайкнутый трек') # Создано для отправки в лс
@@ -133,8 +133,8 @@ def main(arguments):
         send_file = send_file.replace("!", "_")
         send_file = send_file.replace("*", "_")
         if send_file == last_state:
-            # await bot.send_message(chat_id_tg, 'Изменений нет') # Создано для отправки в лс
-            print('Изменений нет')  # Последний лайкнутый не изменился. Ничего не отправляем
+            # await bot.send_message(chat_id_tg, 'Доступных треков больше нет') # Создано для отправки в лс
+            print('Доступных треков больше нет')  # Последний лайкнутый не изменился. Ничего не отправляем
         else:           
             track.download(send_file)  # Качаем трек
             set_mp3_tags(send_file, track)
@@ -147,7 +147,7 @@ def main(arguments):
                               encoding='utf-8') as last_track:  # Открываем файл, чтобы записать инфу
                         last_track.write(track.id)  # Записываем последний отправленный трек
                 except:
-                    logger.error("ошибка записи в файл {0}", LAST_FILE_NAME)
+                    logger.error("Ошибка записи в файл {0}", LAST_FILE_NAME)
             finally:
                 os.remove(send_file)  # Удаляем за собой файл
                 # await bot.send_message(chat_id_tg, f'Удёлан: {send_file}') # Создано для отправки в лс
