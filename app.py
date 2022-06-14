@@ -128,6 +128,7 @@ def main(arguments):
         send_file = send_file.replace('*', '_')
         slugify(send_file).replace("/", "_").replace("\\", "_").replace("\'", "_")
         send_file = send_file.replace("\"", "_").replace("?", "_")
+        send_file = send_file.replace(">", "<").replace(")", "(")
         send_file = send_file.replace("|", "_")
         send_file = send_file.replace(":", "_")
         send_file = send_file.replace("!", "_")
