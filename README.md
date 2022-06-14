@@ -36,6 +36,6 @@ app.py [-h] -b BOT [-c CHAT] [-g GROUP] [-y YAM] [-q]
   -y YAM, --yam YAM     Yandex Music token
   -q, --quiet           do not print status messages to stdout
 ```
-Огромная благодраность за помощь [Alexey Ponomarev](https://github.com/real-mielofon "Alexey Ponomarev")
+Огромная благодараность за помощь [Alexey Ponomarev](https://github.com/real-mielofon "Alexey Ponomarev")
 
 Пример работы: [Чо послушать 🎧](https://t.me/music4o "Чо послушать 🎧")
