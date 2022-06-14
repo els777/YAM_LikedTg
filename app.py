@@ -126,9 +126,11 @@ def main(arguments):
         # await bot.send_message(chat_id_tg, 'Последний лайк: {artist} - {title}') # Создано для отправки в лс
         send_file = f'{artist} - {title}.mp3' # Отправляемый файл в формате mp3
         send_file = send_file.replace('*', '_')
-        slugify(send_file).replace("/", "_").replace("\\", "_").replace("\'", "_")
+        #slugify(send_file).replace("/", "_").replace("\\", "_").replace("\'", "_")
         send_file = send_file.replace("\"", "_").replace("?", "_")
-        send_file = send_file.replace(">", "<").replace(")", "(")
+        send_file = send_file.replace(">", ")")
+        send_file = send_file.replace("<", "(")
+        send_file = send_file.replace("/", "_")
         send_file = send_file.replace("|", "_")
         send_file = send_file.replace(":", "_")
         send_file = send_file.replace("!", "_")
@@ -141,7 +143,7 @@ def main(arguments):
             set_mp3_tags(send_file, track)
             try:
                 await bot.send_audio(group_id_tg, open(send_file, 'rb'),
-                                     caption=f'🎧 {artist} - {title}\n<b>🎧 Жанр:</b> #{genre}\n\n<a href="{url}">🎧 Я.Музыка</a>')
+                                     caption=f'🎧 {artist} - {title}\n**🎧 Жанр:** #{genre}\n\n[🎧 Я.Музыка]({url})',parse_mode='markdown')
                 print(f'Отправлен: {send_file}')
                 try:
                     with open(LAST_FILE_NAME, 'w',
