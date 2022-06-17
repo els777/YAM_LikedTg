@@ -16,7 +16,8 @@ from yandex_music import Client, Track
 from telegram_handler import TelegramHandler
 
 LAST_FILE_NAME = 'last.txt'
-SHEDULE_INTERVAL_SECONDS = 60 * 30 # Отправка каждые 30 минут
+SCHEDULER_INTERVAL_SECONDS = 60 * 30  # Отправка каждые 30 минут
+MAX_FILE_SIZE = 10*1024*1024
 
 logger = logging.getLogger(__name__)
 
@@ -164,9 +165,8 @@ def main(arguments):
         try:
             if size_file < MAX_FILE_SIZE:
                 await bot.send_audio(group_id_tg, open(send_file, 'rb'),
-                                     caption=f'🎧 {artist} - {title}\n' +
-                                             f'<b>🎧 Жанр:</b> #{genre}\n\n' +
-                                             f'<a href="{url}">🎧 Я.Музыка</a>')
+                                     caption=f'🎧 {artist} - {title}\n**🎧 Жанр:** #{genre}\n\n[🎧 Я.Музыка]({url})',
+                                     parse_mode='markdown')
                 logger.info(f'Отправлен: {send_file}')
             else:
                 logger.error(f'Трек {artist} - {title} размер {size_file}. Не шлём.')
